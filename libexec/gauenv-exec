@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+#
+# Summary: Run an executable with the selected Gauche version
+#
+# Usage: gauenv exec <command> [arg1 arg2...]
+#
+# Runs an executable by first preparing PATH so that the selected Gauche
+# version's `bin' directory is at the front.
+#
+
+set -e
+[ -n "$GAUENV_DEBUG" ] && set -x
+
+# Provide gauenv completions
+if [ "$1" = "--complete" ]; then
+  exec gauenv shims --short
+fi
+
+GAUENV_VERSION="$(gauenv-version-name)"
+GAUENV_COMMAND="$1"
+
+if [ -z "$GAUENV_COMMAND" ]; then
+  gauenv-help --usage exec >&2
+  exit 1
+fi
+
+export GAUENV_VERSION
+GAUENV_COMMAND_PATH="$(gauenv-which "$GAUENV_COMMAND")"
+GAUENV_BIN_PATH="${GAUENV_COMMAND_PATH%/*}"
+
+OLDIFS="$IFS"
+IFS=$'\n' scripts=(`gauenv-hooks exec`)
+IFS="$OLDIFS"
+for script in "${scripts[@]}"; do
+  source "$script"
+done
+
+shift 1
+if [ "$GAUENV_VERSION" != "system" ]; then
+  export PATH="${GAUENV_BIN_PATH}:${PATH}"
+fi
+exec -a "$GAUENV_COMMAND" "$GAUENV_COMMAND_PATH" "$@"

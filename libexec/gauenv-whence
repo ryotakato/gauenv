@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Summary: List all Gauche versions that contain the given executable
+# Usage: gauenv whence [--path] <command>
+
+set -e
+[ -n "$GAUENV_DEBUG" ] && set -x
+
+# Provide gauenv completions
+if [ "$1" = "--complete" ]; then
+  echo --path
+  exec gauenv shims --short
+fi
+
+if [ "$1" = "--path" ]; then
+  print_paths="1"
+  shift
+else
+  print_paths=""
+fi
+
+whence() {
+  local command="$1"
+  gauenv-versions --bare | while read version; do
+    path="$(gauenv-prefix "$version")/bin/${command}"
+    if [ -x "$path" ]; then
+      [ "$print_paths" ] && echo "$path" || echo "$version"
+    fi
+  done
+}
+
+GAUENV_COMMAND="$1"
+if [ -z "$GAUENV_COMMAND" ]; then
+  gauenv-help --usage whence >&2
+  exit 1
+fi
+
+result="$(whence "$GAUENV_COMMAND")"
+[ -n "$result" ] && echo "$result"

@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+#
+# Summary: Set or show the global Gauche version
+#
+# Usage: gauenv global <version>
+#
+# Sets the global Gauche version. You can override the global version at
+# any time by setting a directory-specific version with `gauenv local'
+# or by setting the `GAUENV_VERSION' environment variable.
+#
+# <version> should be a string matching a Gauche version known to gauenv.
+# The special version string `system' will use your default system Gauche.
+# Run `gauenv versions' for a list of available Gauche versions.
+
+set -e
+[ -n "$GAUENV_DEBUG" ] && set -x
+
+# Provide gauenv completions
+if [ "$1" = "--complete" ]; then
+  echo system
+  exec gauenv-versions --bare
+fi
+
+GAUENV_VERSION="$1"
+GAUENV_VERSION_FILE="${GAUENV_ROOT}/version"
+
+if [ -n "$GAUENV_VERSION" ]; then
+  gauenv-version-file-write "$GAUENV_VERSION_FILE" "$GAUENV_VERSION"
+else
+  gauenv-version-file-read "$GAUENV_VERSION_FILE" ||
+  gauenv-version-file-read "${GAUENV_ROOT}/global" ||
+  gauenv-version-file-read "${GAUENV_ROOT}/default" ||
+  echo system
+fi

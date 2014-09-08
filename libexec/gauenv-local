@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+#
+# Summary: Set or show the local application-specific Gauche version
+#
+# Usage: gauenv local <version>
+#        gauenv local --unset
+#
+# Sets the local application-specific Gauche version by writing the
+# version name to a file named `.gauche-version'.
+#
+# When you run a Gauche command, gauenv will look for a `.gauche-version'
+# file in the current directory and each parent directory. If no such
+# file is found in the tree, gauenv will use the global Gauche version
+# specified with `gauenv global'. A version specified with the
+# `GAUENV_VERSION' environment variable takes precedence over local
+# and global versions.
+#
+# For backwards compatibility, gauenv will also read version
+# specifications from `.gauenv-version' files, but a `.gauche-version'
+# file in the same directory takes precedence.
+#
+# <version> should be a string matching a Gauche version known to gauenv.
+# The special version string `system' will use your default system Gauche.
+# Run `gauenv versions' for a list of available Gauche versions.
+
+set -e
+[ -n "$GAUENV_DEBUG" ] && set -x
+
+# Provide gauenv completions
+if [ "$1" = "--complete" ]; then
+  echo --unset
+  echo system
+  exec gauenv-versions --bare
+fi
+
+GAUENV_VERSION="$1"
+
+if [ "$GAUENV_VERSION" = "--unset" ]; then
+  rm -f .gauche-version .gauenv-version
+elif [ -n "$GAUENV_VERSION" ]; then
+  previous_file="$(GAUENV_VERSION= gauenv-version-origin || true)"
+  gauenv-version-file-write .gauche-version "$GAUENV_VERSION"
+  if [ "$previous_file" -ef .gauenv-version ]; then
+    rm -f .gauenv-version
+    { echo "gauenv: removed existing \`.gauenv-version' file and migrated"
+      echo "       local version specification to \`.gauche-version' file"
+    } >&2
+  fi
+else
+  gauenv-version-file-read .gauche-version ||
+  gauenv-version-file-read .gauenv-version ||
+  { echo "gauenv: no local version configured for this directory"
+    exit 1
+  } >&2
+fi

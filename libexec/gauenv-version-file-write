@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Usage: gauenv version-file-write <file> <version>
+
+set -e
+[ -n "$GAUENV_DEBUG" ] && set -x
+
+GAUENV_VERSION_FILE="$1"
+GAUENV_VERSION="$2"
+
+if [ -z "$GAUENV_VERSION" ] || [ -z "$GAUENV_VERSION_FILE" ]; then
+  gauenv-help --usage version-file-write >&2
+  exit 1
+fi
+
+# Make sure the specified version is installed.
+gauenv-prefix "$GAUENV_VERSION" >/dev/null
+
+# Write the version out to disk.
+echo "$GAUENV_VERSION" > "$GAUENV_VERSION_FILE"
