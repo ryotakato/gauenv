@@ -1,6 +1,8 @@
 gauenv
 ======
 
+<span style="color: red; ">this repository is stopped maintenance. please Use other tool (ex. asdf)</span>
+
 gauenv is Gauche Version Manager.
 this is similar to [rbenv](https://github.com/sstephenson/rbenv).
 
